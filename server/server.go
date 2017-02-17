@@ -24,6 +24,11 @@ type AirDisk struct {
 	Control int
 }
 
+type Account struct {
+	Id        int64
+	UserName  string
+	Password  string
+}
 func init() {
 	var err error
 	db, err = sql.Open("sqlite3", "./airdisk.db")
@@ -49,13 +54,88 @@ func Run()  {
 	http.HandleFunc("/controlInfo", controlInfo)
 	http.HandleFunc("/control/create", controlCreateForm)
 	http.HandleFunc("/control/create/process", controlCreateProcesss)
+
+
+	// /account/login
+	http.HandleFunc("/account/login", login)
 	http.ListenAndServe(":8080", nil)
 
 }
 
 func index(w http.ResponseWriter, r *http.Request)  {
 	//http.Redirect(w,r, "/upgradeInfo", http.StatusSeeOther)
-	tpl.ExecuteTemplate(w, "index.gohtml", nil)
+	tpl.ExecuteTemplate(w, "login.gohtml", nil)
+}
+
+func login(w http.ResponseWriter, req *http.Request)  {
+	//http.Redirect(w,r, "/upgradeInfo", http.StatusSeeOther)
+	//tpl.ExecuteTemplate(w, "login.gohtml", nil)
+
+
+	ctx := make(map[string]interface{})
+
+	var next = req.FormValue("next")
+	ctx["next"] = next
+	//
+	//ctx[csrf.TemplateTag] = csrf.TemplateField(req)
+	//var account = Account{}
+	var account = Account{Id:1, UserName:"hello",Password:"admin"}
+	if req.Method == "POST" {
+		var username = req.FormValue("username")
+		var password = req.FormValue("password")
+
+		if username != "" && password != "" {
+			//err := dbMap.SelectOne(&account, "select * from account where username=$1 or email=$2 limit 1", username, username)
+			//
+			//if err != nil && account.Id > 0 {
+			//	SetFlashMessages(req, w, "用户不存在！")
+			//	http.Redirect(w, req, "/account/login", http.StatusFound)
+			//	return
+			//}
+			//
+			//if account.Password == lib.MD5(password) {
+			if account.Password == "admin" {
+				SetSession(req, w, SESSION_WEB, account)
+			//	dbMap.Exec("update account set lastlogin=$1 where $2", time.Now(), account.Id)
+			//
+				if next != "" {
+					http.Redirect(w, req, next, http.StatusFound)
+					return
+				} else {
+					http.Redirect(w, req, "/", http.StatusFound)
+					return
+				}
+			} else {
+				SetFlashMessages(req, w, "账号和密码不匹配")
+				http.Redirect(w, req, "/account/login", http.StatusFound)
+				return
+			}
+			fmt.Println("account:", username, " password:", password)
+			tpl.ExecuteTemplate(w, "index.gohtml", nil)
+		}
+	} else {
+		//dbMap.SelectOne(&account, "select * from account limit 1")
+		//if account.Id <= 0 {
+		//	account.UserName = "admin"
+		//	account.Password = lib.MD5("admin")
+		//	account.Status = true
+		//	dbMap.Insert(&account)
+		//	SetFlashMessages(req, w, "初始化账号和密码：admin / admin，请及时更改密码！")
+		//}
+		//
+		ctx["flashes"] = GetFlashMessages(req, w)
+
+		//if currentUser := GetSession(req, SESSION_WEB); currentUser != nil {
+		//	if next == "" {
+		//		next = "/"
+		//	}
+		//	http.Redirect(w, req, next, http.StatusFound)
+		//	return
+		//}
+		//
+		//r.HTML(w, http.StatusOK, "account/login", ctx, render.HTMLOptions{Layout: ""})
+		//return
+	}
 }
 
 func controlInfo(w http.ResponseWriter, r *http.Request){
