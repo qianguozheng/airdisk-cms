@@ -29,9 +29,9 @@
 <body>
 <p> Mac - Mac - Upgrade - Control</p>
 {{range .}}
-<p><a href="/upgrade/show?mac={{.Mac}}">{{.Mac}}</a> - {{.Mac}} - {{.Upgrade}} - {{.Control}}
+<p><a href="/admin/upgrade/show?mac={{.Mac}}">{{.Mac}}</a> - {{.Mac}} - {{.Upgrade}} - {{.Control}}
 {{end}}
 
-<p class="link"><a href="/control/create">Dispatch Control command to Device</a></p>
+<p class="link"><a href="/admin/control/create">Dispatch Control command to Device</a></p>
 </body>
 </html>

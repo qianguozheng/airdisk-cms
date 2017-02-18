@@ -29,9 +29,9 @@
 <body>
 <p> Mac - URL - Version - Md5</p>
 {{range .}}
-<p><a href="/upgrade/show?mac={{.Mac}}">{{.Mac}}</a> - {{.Url}} - {{.Version}} - {{.Md5}} - <a href="/upgrade/update?mac={{.Mac}}">update</a>  - <a href="/upgrade/delete/process?mac={{.Mac}}">delete</a> </p>
+<p><a href="/admin/upgrade/show?mac={{.Mac}}">{{.Mac}}</a> - {{.Url}} - {{.Version}} - {{.Md5}} - <a href="/upgrade/update?mac={{.Mac}}">update</a>  - <a href="/upgrade/delete/process?mac={{.Mac}}">delete</a> </p>
 {{end}}
 
-<p class="link"><a href="/upgrade/create">Insert An Upgrade Device</a></p>
+<p class="link"><a href="/admin/upgrade/create">Insert An Upgrade Device</a></p>
 </body>
 </html>

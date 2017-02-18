@@ -6,6 +6,9 @@ import (
 	"html/template"
 	"net/http"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/gorilla/mux"
+	"github.com/urfave/negroni"
+	"encoding/gob"
 )
 
 var db *sql.DB
@@ -42,24 +45,39 @@ func init() {
 	fmt.Println("You connected to your database.")
 
 	tpl = template.Must(template.ParseGlob("templates/*.gohtml"))
+
+	//Session 使用前需要注册数据结构
+	gob.Register(&Account{})
 }
 func Run()  {
-	http.HandleFunc("/", index)
-	http.HandleFunc("/upgradeInfo", upgradeInfo)
-	http.HandleFunc("/upgrade/create", upgradeCreateForm)
-	http.HandleFunc("/upgrade/create/process", upgradeCreateProcess)
-	http.HandleFunc("/upgrade/update", upgradeUpdateForm)
-	http.HandleFunc("/upgrade/update/process", upgradeUpdateProcess)
-	http.HandleFunc("/upgrade/delete/process", upgradeDeleteProcess)
-	http.HandleFunc("/controlInfo", controlInfo)
-	http.HandleFunc("/control/create", controlCreateForm)
-	http.HandleFunc("/control/create/process", controlCreateProcesss)
+	router := mux.NewRouter()
+	adminRoutes := mux.NewRouter()
 
+	router.HandleFunc("/", index)
 
+	adminRoutes.HandleFunc("/admin/", adminIndex)
+	adminRoutes.HandleFunc("/admin/upgradeInfo", upgradeInfo)
+	adminRoutes.HandleFunc("/admin/upgrade/create", upgradeCreateForm)
+	adminRoutes.HandleFunc("/admin/upgrade/create/process", upgradeCreateProcess)
+	adminRoutes.HandleFunc("/admin/upgrade/update", upgradeUpdateForm)
+	adminRoutes.HandleFunc("/admin/upgrade/update/process", upgradeUpdateProcess)
+	adminRoutes.HandleFunc("/admin/upgrade/delete/process", upgradeDeleteProcess)
+	adminRoutes.HandleFunc("/admin/controlInfo", controlInfo)
+	adminRoutes.HandleFunc("/admin/control/create", controlCreateForm)
+	adminRoutes.HandleFunc("/admin/control/create/process", controlCreateProcesss)
+
+	router.PathPrefix("/admin").Handler(negroni.New(
+		NewCheckLogin(),
+		negroni.Wrap(adminRoutes),
+	))
 	// /account/login
-	http.HandleFunc("/account/login", login)
-	http.ListenAndServe(":8080", nil)
+	router.HandleFunc("/account/login", login)
+	http.ListenAndServe(":8080", router)
 
+}
+
+func adminIndex(w http.ResponseWriter, r *http.Request)  {
+	tpl.ExecuteTemplate(w, "index.gohtml", nil)
 }
 
 func index(w http.ResponseWriter, r *http.Request)  {
@@ -94,7 +112,7 @@ func login(w http.ResponseWriter, req *http.Request)  {
 			//}
 			//
 			//if account.Password == lib.MD5(password) {
-			if account.Password == "admin" {
+			if password == "admin" {
 				SetSession(req, w, SESSION_WEB, account)
 			//	dbMap.Exec("update account set lastlogin=$1 where $2", time.Now(), account.Id)
 			//
@@ -102,8 +120,8 @@ func login(w http.ResponseWriter, req *http.Request)  {
 					http.Redirect(w, req, next, http.StatusFound)
 					return
 				} else {
-					http.Redirect(w, req, "/", http.StatusFound)
-					return
+					//http.Redirect(w, req, "/admin/upgradeInfo", http.StatusFound)
+					//return
 				}
 			} else {
 				SetFlashMessages(req, w, "账号和密码不匹配")

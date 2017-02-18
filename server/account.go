@@ -3,7 +3,7 @@ package server
 import (
 	"github.com/gorilla/sessions"
 	"net/http"
-	"github.com/astaxie/beego/session"
+	//"github.com/astaxie/beego/session"
 	"strings"
 )
 
@@ -11,12 +11,12 @@ const (
 	SESSION_WEB = "SESSION_WEB"
 	SESSION_FLASH_MESSAGE = "SESSION_FLASH_MESSAGE"
 	SESSION_FLASH_OBJECT = "SESSION_FLASH_OBJECT"
-	STORE_KEY = "AIRDISK_CMS"
+	STORE_KEY = "AIRDISKCMS"
 	TIMEFORMAT = "2017-02-17 117:57:48"
 )
 
 var (
-	Store = sessions.NewCookieStore([]byte[STORE_KEY])
+	Store = sessions.NewCookieStore([]byte(STORE_KEY))
 	SessionFlash *sessions.Session
 	SessionWeb *sessions.Session
 )
@@ -85,6 +85,7 @@ func PopSession(req *http.Request, w http.ResponseWriter, key string) interface{
 	v := SessionWeb.Values[key]
 	SessionWeb.Values[key] = nil
 	SessionWeb.Save(req, w)
+	return v
 }
 
 func ClearSession(req *http.Request, w http.ResponseWriter, key string)  {
@@ -119,7 +120,8 @@ func (t *CheckLogin) ServeHTTP(rw http.ResponseWriter, req *http.Request, next h
 		next := req.URL.Path
 		next_lower := strings.ToLower(next)
 		if t.RememberNext && (!strings.Contains(next_lower, "login") || !strings.Contains(next_lower, "logout")) {
-			login_url = login_url + "?next=" + next
+			//login_url = login_url + "?next=" + next
+			login_url = "/?next="+next
 		}
 
 		http.Redirect(rw, req, login_url, http.StatusFound)
