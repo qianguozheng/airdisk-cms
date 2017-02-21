@@ -2,13 +2,16 @@ package server
 
 import (
 	"database/sql"
-	"fmt"
 	"html/template"
 	"net/http"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 	"encoding/gob"
+	//"github.com/google/martian/log"
+	log "github.com/Sirupsen/logrus"
+	"os"
+	"fmt"
 )
 
 var db *sql.DB
@@ -49,7 +52,23 @@ func init() {
 	//Session 使用前需要注册数据结构
 	gob.Register(&Account{})
 }
+
+func InitLog(file string) *os.File{
+
+	f, err := os.OpenFile(file, os.O_WRONLY | os.O_CREATE, 0755)
+	if err != nil {
+		fmt.Println("Open Logfile failed")
+		return nil
+	}
+	log.SetOutput(f)
+	//defer f.Close()
+	return f
+}
 func Run()  {
+	fileHandle := InitLog("airdisk-cms.log")
+	defer fileHandle.Close()
+	log.Print("WebServer Start")
+
 	router := mux.NewRouter()
 	adminRoutes := mux.NewRouter()
 
@@ -77,18 +96,20 @@ func Run()  {
 }
 
 func adminIndex(w http.ResponseWriter, r *http.Request)  {
+	log.Debug("access adminIndex")
 	tpl.ExecuteTemplate(w, "index.gohtml", nil)
 }
 
 func index(w http.ResponseWriter, r *http.Request)  {
 	//http.Redirect(w,r, "/upgradeInfo", http.StatusSeeOther)
+	log.Debug("access index")
 	tpl.ExecuteTemplate(w, "login.gohtml", nil)
 }
 
 func login(w http.ResponseWriter, req *http.Request)  {
 	//http.Redirect(w,r, "/upgradeInfo", http.StatusSeeOther)
 	//tpl.ExecuteTemplate(w, "login.gohtml", nil)
-
+	log.Print("access login function")
 
 	ctx := make(map[string]interface{})
 
@@ -128,7 +149,8 @@ func login(w http.ResponseWriter, req *http.Request)  {
 				http.Redirect(w, req, "/account/login", http.StatusFound)
 				return
 			}
-			fmt.Println("account:", username, " password:", password)
+			//fmt.Println("account:", username, " password:", password)
+			log.Debugf("account:", username, " password:", password)
 			tpl.ExecuteTemplate(w, "index.gohtml", nil)
 		}
 	} else {
@@ -212,7 +234,7 @@ func controlCreateProcesss(w http.ResponseWriter, r *http.Request){
 	// Update airdisk table values.
 	_, err:= db.Exec("update airdisk set control=1 where mac = $1", bk.Mac)
 	if err != nil{
-		fmt.Println(err.Error())
+		log.Errorf(err.Error())
 	}
 
 	// confirm insertion
@@ -284,7 +306,7 @@ func upgradeCreateProcess(w http.ResponseWriter, r *http.Request) {
 	// Update airdisk table values.
 	_, err= db.Exec("update airdisk set upgrade=1 where mac = $1", bk.Mac)
 	if err != nil{
-		fmt.Println(err.Error())
+		log.Errorf(err.Error())
 	}
 
 	// confirm insertion
@@ -346,7 +368,7 @@ func upgradeUpdateProcess(w http.ResponseWriter, r *http.Request){
 	// Update airdisk table values.
 	_, err= db.Exec("update airdisk set upgrade=1 where mac = $1", bk.Mac)
 	if err != nil{
-		fmt.Println(err.Error())
+		log.Errorf(err.Error())
 	}
 
 	// confirm insertion
@@ -374,7 +396,8 @@ func upgradeDeleteProcess(w http.ResponseWriter, r*http.Request)  {
 	// Update airdisk table values.
 	_, err= db.Exec("update airdisk set upgrade=0 where mac = $1", mac)
 	if err != nil{
-		fmt.Println(err.Error())
+		//fmt.Println(err.Error())
+		log.Errorf(err.Error())
 	}
 
 	http.Redirect(w, r, "/upgradeInfo", http.StatusSeeOther)
