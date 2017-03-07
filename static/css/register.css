@@ -59,19 +59,19 @@ body{
 }
 
 .left-form,.right-form{
-	float:left;
+	float:center;
 	margin:22px 28px;
 	width:40%;
 }
 .left-form input[type=text],.left-form input[type=email],.left-form input[type=password] {
-	float:left;
+	float:center;
 	font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
 	width:80%;
 	padding: 0.7em 2em 0.7em 1em;
 	border:none;
 	color: #000;
 	font-size:15px;
-	float: left;
+	float: center;
 	outline: none;
 }
 .right-form{

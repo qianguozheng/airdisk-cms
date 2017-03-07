@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/negroni"
 	"encoding/gob"
 	//"github.com/google/martian/log"
-	log "github.com/Sirupsen/logrus"
+	//log "github.com/Sirupsen/logrus"
 	"os"
 	"fmt"
 )
@@ -60,7 +60,7 @@ func InitLog(file string) *os.File{
 		fmt.Println("Open Logfile failed")
 		return nil
 	}
-	log.SetOutput(f)
+	//log.SetOutput(f)
 	//defer f.Close()
 	return f
 }
@@ -74,6 +74,7 @@ func Run()  {
 
 	router.HandleFunc("/", index)
 	router.HandleFunc("/register", register)
+	router.HandleFunc("/account/register", registerCheck)
 
 	adminRoutes.HandleFunc("/admin/", adminIndex)
 	adminRoutes.HandleFunc("/admin/upgradeInfo", upgradeInfo)
@@ -92,8 +93,8 @@ func Run()  {
 	))
 	// /account/login
 	router.HandleFunc("/account/login", login)
-	router.Handle("/static/", http.FileServer(http.Dir("static")))
-
+	//router.Handle("/static/", http.FileServer(http.Dir("/Users/weeds/Documents/go/weeds/airdisk-cms/static/")))
+	router.PathPrefix("/static").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("static/"))))
 	http.ListenAndServe(":8080", router)
 
 }
@@ -111,8 +112,27 @@ func index(w http.ResponseWriter, r *http.Request)  {
 
 func register(w http.ResponseWriter, r *http.Request)  {
 	//http.Redirect(w,r, "/upgradeInfo", http.StatusSeeOther)
-	fmt.Println("access index")
+	fmt.Println("access register")
 	tpl.ExecuteTemplate(w, "register.gohtml", nil)
+}
+
+func registerCheck(w http.ResponseWriter, r *http.Request)  {
+	//http.Redirect(w,r, "/upgradeInfo", http.StatusSeeOther)
+	fmt.Println("request:", r.FormValue("username"))
+	fmt.Println("request:", r.FormValue("password"))
+	fmt.Println("request:", r.FormValue("email"))
+
+	//tpl.ExecuteTemplate(w, "login.gohtml", nil)
+	//w.Write([]byte("OK"))
+	type V struct {
+		Result bool
+		//Test bool
+	}
+	var v V
+	v.Result = false
+	//v.Test = false
+	tpl.ExecuteTemplate(w, "register_status.gohtml", &v)
+	//http.RedirectHandler("http://localhost:8080/acount/login", http.StatusPermanentRedirect)
 }
 
 func login(w http.ResponseWriter, req *http.Request)  {
